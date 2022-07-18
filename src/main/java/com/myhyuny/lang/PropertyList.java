@@ -246,7 +246,8 @@ public class PropertyList {
                         this.parseValue(item);
                     }
                 } else if (object instanceof Map) {
-                    for (Map.Entry entry : ((Map)object).entrySet()) {
+                    for (Object _entry : ((Map)object).entrySet()) {
+                        Map.Entry entry = (Map.Entry) _entry;
                         Object value = entry.getValue();
                         if (value == null) continue;
                         String key = (String)entry.getKey();

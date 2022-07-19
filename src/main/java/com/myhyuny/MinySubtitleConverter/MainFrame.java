@@ -3,45 +3,22 @@
  */
 package com.myhyuny.MinySubtitleConverter;
 
-import com.myhyuny.MinySubtitleConverter.SubtitleConverter;
 import com.myhyuny.application.AppleApplication;
-import com.myhyuny.application.information.Author;
-import com.myhyuny.application.information.EMail;
-import com.myhyuny.application.information.Homepage;
-import com.myhyuny.application.information.Twitter;
-import com.myhyuny.application.information.Version;
+import com.myhyuny.application.information.*;
 import com.myhyuny.window.About;
-import java.awt.BorderLayout;
-import java.awt.Choice;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.FileDialog;
-import java.awt.Frame;
-import java.awt.GridLayout;
-import java.awt.Menu;
-import java.awt.MenuBar;
-import java.awt.MenuItem;
-import java.awt.MenuShortcut;
-import java.awt.Panel;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetDragEvent;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetEvent;
-import java.awt.dnd.DropTargetListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.dnd.*;
+import java.awt.event.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Map;
@@ -52,56 +29,53 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.swing.JLabel;
-import javax.swing.JProgressBar;
-import javax.swing.JTextField;
 
-@Version(value="0.6.0")
-@Author(value="Hyunmin Kang")
-@EMail(value="myhyuny@live.com")
-@Homepage(value="http://blog.myhyuny.com/")
-@Twitter(value="MyHyuny")
+@Version(value = "0.6.0")
+@Author(value = "Junoh Moon")
+@EMail(value = "mjo970625@gmail.com")
+@Homepage(value = "https://cv.sixtyfive.me")
+@Twitter(value = "")
 public class MainFrame
 extends Frame
 implements WindowListener,
 ActionListener,
-FocusListener,
-DropTargetListener,
-FilenameFilter {
+        FocusListener,
+        DropTargetListener,
+        FilenameFilter {
     private static final long serialVersionUID = -4911202395284319506L;
     private static final String charsetAuto = "Auto (Unicode Or System Default)";
     private static final String outputTypeSAMI = "SAMI (smi)";
     private static final String outputTypeSubRip = "SubRip (srt)";
-    private static int LABLE_ALIGNMENT = AppleApplication.isSupport() ? 4 : 2;
+    private static final int LABLE_ALIGNMENT = AppleApplication.isSupport() ? 4 : 2;
     private static final int menuLine = 5;
     private static final Pattern syncPattern = Pattern.compile("-?\\d+\\.?\\d*");
-    private Preferences preferences = Preferences.userNodeForPackage(this.getClass());
-    private Charset outputCharset = Charset.forName("UTF-8");
+    private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
+    private final About about = new About(this);
     private Charset inputCharset = null;
     private String lineDelimiter = null;
     private int outputType = 0;
     private long sync = 0L;
-    private About about = new About(this);
-    private MenuItem menuItemOpenFile = new MenuItem("Open File...", new MenuShortcut(79));
-    private MenuItem menuItemClose = new MenuItem("Close", new MenuShortcut(87));
-    private MenuItem menuItemExit = new MenuItem("Exit");
-    private MenuItem menuItemAbout = new MenuItem("About MinySubtitleConverter");
-    private JLabel outputTypeLabel = new JLabel("Output Type", LABLE_ALIGNMENT);
-    private JLabel inputCharsetLabel = new JLabel("Input Charset", LABLE_ALIGNMENT);
-    private JLabel outputCharsetLabel = new JLabel("Output Charset", LABLE_ALIGNMENT);
-    private JLabel lineDelimiterLabel = new JLabel("Line Delimiter", LABLE_ALIGNMENT);
-    private JLabel syncLabel = new JLabel("Sync", LABLE_ALIGNMENT);
-    private Choice outTypeChoice = new Choice();
-    private Choice inputCharsetChoice = new Choice();
-    private Choice outputCharsetChoice = new Choice();
-    private Choice lineDelimiterChoice = new Choice();
-    private JTextField syncTextField = new JTextField("0.0 sec");
-    private JProgressBar progressBar = new JProgressBar();
-    private JLabel statusLabel = new JLabel();
-    private DropTarget dropTarget = new DropTarget(this, 0x40000000, this);
+    private final MenuItem menuItemOpenFile = new MenuItem("Open File...", new MenuShortcut(79));
+    private final MenuItem menuItemClose = new MenuItem("Close", new MenuShortcut(87));
+    private final MenuItem menuItemExit = new MenuItem("Exit");
+    private final MenuItem menuItemAbout = new MenuItem("About MinySubtitleConverter");
+    private final JLabel outputTypeLabel = new JLabel("Output Type", LABLE_ALIGNMENT);
+    private final JLabel inputCharsetLabel = new JLabel("Input Charset", LABLE_ALIGNMENT);
+    private final JLabel outputCharsetLabel = new JLabel("Output Charset", LABLE_ALIGNMENT);
+    private final JLabel lineDelimiterLabel = new JLabel("Line Delimiter", LABLE_ALIGNMENT);
+    private final JLabel syncLabel = new JLabel("Sync", LABLE_ALIGNMENT);
+    private final Choice outTypeChoice = new Choice();
+    private final Choice inputCharsetChoice = new Choice();
+    private final Choice outputCharsetChoice = new Choice();
+    private final Choice lineDelimiterChoice = new Choice();
+    private final JTextField syncTextField = new JTextField("0.0 sec");
+    private final JProgressBar progressBar = new JProgressBar();
+    private final JLabel statusLabel = new JLabel();
+    private final DropTarget dropTarget = new DropTarget(this, 0x40000000, this);
+    private Charset outputCharset = StandardCharsets.UTF_8;
     private AppleApplication app;
     private boolean run = false;
-    private final Runnable startConvert = new Runnable(){
+    private final Runnable startConvert = new Runnable() {
 
         @Override
         public void run() {
@@ -152,16 +126,16 @@ FilenameFilter {
         this.setMenuBar(mb);
         this.setLayout(new BorderLayout());
         Panel borderPanel = new Panel(new BorderLayout(10, 0));
-        this.add((Component)new Panel(), "North");
-        this.add((Component)new Panel(), "East");
-        this.add((Component)new Panel(), "West");
+        this.add(new Panel(), "North");
+        this.add(new Panel(), "East");
+        this.add(new Panel(), "West");
         Panel panel = new Panel(new GridLayout(5, 1));
         panel.add(this.outputTypeLabel);
         panel.add(this.inputCharsetLabel);
         panel.add(this.outputCharsetLabel);
         panel.add(this.lineDelimiterLabel);
         panel.add(this.syncLabel);
-        borderPanel.add((Component)panel, "West");
+        borderPanel.add(panel, "West");
         panel = new Panel(new GridLayout(5, 1));
         panel.add(this.outTypeChoice);
         this.outTypeChoice.add(outputTypeSAMI);
@@ -179,12 +153,12 @@ FilenameFilter {
         this.lineDelimiterChoice.add("Uinx");
         this.lineDelimiterChoice.add("Windows");
         panel.add(this.syncTextField);
-        borderPanel.add((Component)panel, "Center");
-        this.add((Component)borderPanel, "Center");
+        borderPanel.add(panel, "Center");
+        this.add(borderPanel, "Center");
         panel = new Panel(new BorderLayout(10, 0));
-        panel.add((Component)this.progressBar, "West");
-        panel.add((Component)this.statusLabel, "Center");
-        this.add((Component)panel, "South");
+        panel.add(this.progressBar, "West");
+        panel.add(this.statusLabel, "Center");
+        this.add(panel, "South");
         this.syncTextField.addFocusListener(this);
         this.addWindowListener(this);
         this.outTypeChoice.select(this.preferences.get("OutputType", outputTypeSubRip));
@@ -192,8 +166,8 @@ FilenameFilter {
         this.outputCharsetChoice.select(this.preferences.get("OutputCharset", outputTypeSubRip));
         this.lineDelimiterChoice.select(this.preferences.get("LineDelimiter", "Default"));
         Dimension dimension = this.getToolkit().getScreenSize();
-        int x = this.preferences.getInt("WindowBoundsX", Math.round((float)dimension.width / 2.0f - (float)this.getWidth() / 2.0f));
-        int y = this.preferences.getInt("WindowBoundsY", Math.round((float)dimension.height / 2.0f - (float)this.getHeight() / 2.0f));
+        int x = this.preferences.getInt("WindowBoundsX", Math.round((float) dimension.width / 2.0f - (float) this.getWidth() / 2.0f));
+        int y = this.preferences.getInt("WindowBoundsY", Math.round((float) dimension.height / 2.0f - (float) this.getHeight() / 2.0f));
         this.setBounds(x, y, this.getWidth(), this.getHeight());
     }
 
@@ -445,7 +419,7 @@ FilenameFilter {
     @Override
     public void focusLost(FocusEvent e) {
         if (e.getSource() == this.syncTextField) {
-            this.syncTextField.setText(String.valueOf(this.parseFloatString(this.syncTextField.getText())) + " sec");
+            this.syncTextField.setText(this.parseFloatString(this.syncTextField.getText()) + " sec");
         }
     }
 }

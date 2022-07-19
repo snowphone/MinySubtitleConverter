@@ -4,18 +4,10 @@
 package com.myhyuny.MinySubtitleConverter;
 
 import com.myhyuny.io.IO;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+
+import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
@@ -38,7 +30,7 @@ extends Thread {
     private static final Pattern patternRightTrim = Pattern.compile("\\s+\\n");
     private static final Pattern patternSpace = Pattern.compile("[\u3000  ]+");
     private static final Pattern patternComments = Pattern.compile("<!--.*?-->", 32);
-    private static Charset defaultCharset;
+    private static final Charset defaultCharset;
     public static final Pattern PATTERN_FILE_EXTENTION;
     private static final String FILE_EXTENTION_SAMI = "smi";
     private static final String FILE_EXTENTION_SUBRIP = "srt";
@@ -51,7 +43,7 @@ extends Thread {
     private File inputFile;
     private String inputType;
     private Charset inputCharset = null;
-    private Charset outputCharset = Charset.forName("UTF-8");
+    private Charset outputCharset = StandardCharsets.UTF_8;
     private String lineDelimiter;
     private int outputType = 0;
     private long sync;
@@ -128,14 +120,14 @@ extends Thread {
                         if (bytes[0] == 0 && bytes[1] == 0 && bytes[2] == -2 && bytes[3] == -1) {
                             this.setInputCharset(Charset.forName("UTF-32BE"));
                         } else if (bytes[0] == -17 && bytes[1] == -69 && bytes[2] == -65) {
-                            this.setInputCharset(Charset.forName("UTF-8"));
+                            this.setInputCharset(StandardCharsets.UTF_8);
                         } else if (bytes[0] == -2 && bytes[1] == -1) {
-                            this.setInputCharset(Charset.forName("UTF-16BE"));
+                            this.setInputCharset(StandardCharsets.UTF_16BE);
                         } else if (bytes[0] == -1 && bytes[1] == -2) {
                             if (bytes[2] == 0 && bytes[3] == 0) {
                                 this.setInputCharset(Charset.forName("UTF-32LE"));
                             } else {
-                                this.setInputCharset(Charset.forName("UTF-16LE"));
+                                this.setInputCharset(StandardCharsets.UTF_16LE);
                             }
                         } else if (defaultCharset.equals(Charset.defaultCharset())) {
                             this.setInputCharset(defaultCharset);
@@ -169,7 +161,7 @@ extends Thread {
                 BufferedReader reader = null;
                 try {
                     try {
-                        reader = new BufferedReader(new InputStreamReader((InputStream)new FileInputStream(file), this.inputCharset));
+                        reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), this.inputCharset));
                         inputSubtitle = IO.readAll(reader);
                     }
                     catch (IOException e) {
@@ -285,7 +277,7 @@ extends Thread {
     private void writeFile(File file, String subtitle) throws IOException {
         BufferedWriter writer = null;
         try {
-            writer = new BufferedWriter(new OutputStreamWriter((OutputStream)new FileOutputStream(file), this.outputCharset));
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), this.outputCharset));
             writer.write(subtitle);
         }
         catch (Throwable throwable) {
@@ -328,7 +320,7 @@ extends Thread {
             text = text.replace(LINE_DELIMITER_UNIX, LINE_DELIMITER_WINDOWS);
         }
         String name = patternExtention.split(this.inputFile.getName(), 0)[0];
-        File file = new File(this.inputFile.getParent(), String.valueOf(name) + FILE_EXTENTION_SAMI);
+        File file = new File(this.inputFile.getParent(), name + FILE_EXTENTION_SAMI);
         this.writeFile(file, text);
         return file;
     }
@@ -353,7 +345,7 @@ extends Thread {
             text = text.replace(LINE_DELIMITER_UNIX, LINE_DELIMITER_WINDOWS);
         }
         String name = patternExtention.split(this.inputFile.getName(), 0)[0];
-        File file = new File(this.inputFile.getParent(), String.valueOf(name) + FILE_EXTENTION_SUBRIP);
+        File file = new File(this.inputFile.getParent(), name + FILE_EXTENTION_SUBRIP);
         this.writeFile(file, text);
         return file;
     }
@@ -380,7 +372,7 @@ extends Thread {
                 }
             }
             if (file != null) {
-                System.out.printf("%s -> %s\n", this.inputFile.getName(), file.getName());
+                System.out.printf("%s (%s) -> %s (%s)\n", this.inputFile.getName(), this.inputCharset.name(), file.getName(), this.outputCharset.name());
             } else {
                 System.err.printf("Unsupported Type: %s\n", this.inputFile.getName());
             }

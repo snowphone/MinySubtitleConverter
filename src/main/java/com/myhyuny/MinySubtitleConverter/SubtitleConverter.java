@@ -45,7 +45,7 @@ extends Thread {
     private Charset inputCharset = null;
     private Charset outputCharset = StandardCharsets.UTF_8;
     private String lineDelimiter;
-    private int outputType = 0;
+    private OutputType outputType = OutputType.NOT_SET;
     private long sync;
 
     static {
@@ -69,7 +69,7 @@ extends Thread {
         this.inputCharset = inputCharset;
     }
 
-    public SubtitleConverter(File input, Charset inputCharset, int outputType) {
+    public SubtitleConverter(File input, Charset inputCharset, OutputType outputType) {
         this(input, inputCharset);
         this.outputType = outputType;
     }
@@ -89,6 +89,10 @@ extends Thread {
     public Charset getOutputCharset() {
         return this.outputCharset;
     }
+
+	public void setOutputType(OutputType type) {
+		this.outputType = type;
+	}
 
     public void setLineDelimiter(String lineDelimiter) {
         this.lineDelimiter = lineDelimiter;
@@ -212,7 +216,7 @@ extends Thread {
         this.inputType = FILE_EXTENTION_SAMI;
         long end = 0L;
         String text = "";
-        this.subtitleList = new ArrayDeque();
+        this.subtitleList = new ArrayDeque<>();
         Subtitle subtitle = new Subtitle(1);
         String[] arrstring = split;
         int n = split.length;
@@ -244,7 +248,7 @@ extends Thread {
             return false;
         }
         this.inputType = FILE_EXTENTION_SUBRIP;
-        this.subtitleList = new ArrayDeque();
+        this.subtitleList = new ArrayDeque<>();
         String[] arrstring = split;
         int n = split.length;
         for (int i = 0; i < n; ++i) {
@@ -350,15 +354,15 @@ extends Thread {
         return file;
     }
 
-    public void write(int outputType) {
+    public void write(OutputType outputType) {
         File file = null;
         try {
             switch (outputType) {
-                case 1: {
+				case SAMI : {
                     file = this.writeSAMI();
                     break;
                 }
-                case 2: {
+                case SUBRIP: {
                     file = this.writeSubRip();
                     break;
                 }

@@ -5,10 +5,13 @@
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.myhyuny.MinySubtitleConverter.MainFrame;
+import com.myhyuny.MinySubtitleConverter.OutputType;
 import com.myhyuny.MinySubtitleConverter.SubtitleConverter;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -22,6 +25,12 @@ public class MinySubtitleConverter {
 
     @Parameter(description = "Subtitles...")
     private List<String> uriList = new ArrayList<>();
+
+	@Parameter(names = {"--sync", "-s"}, description = "Modify sync in msec")
+	private long sync = 0L;
+
+	@Parameter(names = {"--to", "-t"}, description = "Target extension. Allowed options: [smi|srt]")
+	private String ext = "srt";
 
     public static void main(String[] args) throws InterruptedException {
         var main = new MinySubtitleConverter();
@@ -58,7 +67,25 @@ public class MinySubtitleConverter {
                 .collect(Collectors.toList());
 
         ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        list.stream().map(SubtitleConverter::new).forEach(service::execute);
+
+        var jobs = list.stream().map(SubtitleConverter::new)
+			.peek(it -> it.setOutputCharset(StandardCharsets.UTF_8));
+
+		if (this.sync != 0L) {
+			jobs = jobs.peek(it -> it.setSync(this.sync));
+		}
+
+		switch (this.ext.toLowerCase()) {
+			case "smi":
+				jobs = jobs.peek(it -> it.setOutputType(OutputType.SAMI));
+				break;
+			case "srt":
+				jobs = jobs.peek(it -> it.setOutputType(OutputType.SUBRIP));
+				break;
+			// Default: do nothing
+		}
+
+		jobs.forEach(service::execute);
 
         service.shutdown();
         service.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);

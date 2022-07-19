@@ -53,7 +53,7 @@ ActionListener,
     private final About about = new About(this);
     private Charset inputCharset = null;
     private String lineDelimiter = null;
-    private int outputType = 0;
+    private OutputType outputType = OutputType.NOT_SET;
     private long sync = 0L;
     private final MenuItem menuItemOpenFile = new MenuItem("Open File...", new MenuShortcut(79));
     private final MenuItem menuItemClose = new MenuItem("Close", new MenuShortcut(87));
@@ -202,14 +202,15 @@ ActionListener,
         return null;
     }
 
-    private int outputType(String type) {
-        if (type == outputTypeSAMI) {
-            return 1;
-        }
-        if (type == outputTypeSubRip) {
-            return 2;
-        }
-        return 0;
+    private OutputType outputType(String type) {
+		switch (type) {
+			case outputTypeSAMI:
+				return OutputType.SAMI;
+			case outputTypeSubRip:
+				return OutputType.SUBRIP;
+			default:
+				return OutputType.NOT_SET;
+		}
     }
 
     private float parseFloat(String str) {
@@ -240,7 +241,7 @@ ActionListener,
         sc.write(this.outputType);
     }
 
-    public void convert(List<File> files, final int outputType) {
+    public void convert(List<File> files, final OutputType outputType) {
         final ArrayDeque<File> list = new ArrayDeque<File>();
         for (File file : files) {
             Matcher matcher = SubtitleConverter.PATTERN_FILE_EXTENTION.matcher(file.getName());

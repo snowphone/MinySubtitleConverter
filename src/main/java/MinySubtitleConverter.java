@@ -1,53 +1,39 @@
 /*
  * Decompiled with CFR 0.150.
  */
+
 import com.myhyuny.MinySubtitleConverter.SubtitleConverter;
+
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 public class MinySubtitleConverter {
     public static void main(String[] args) throws InterruptedException {
         if (args.length < 1) {
             try {
                 Class<?> c = Class.forName("com.myhyuny.MinySubtitleConverter.MainFrame");
-                c.getMethod("setVisible", Boolean.TYPE).invoke(c.newInstance(), true);
-            }
-            catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-            catch (InstantiationException e) {
-                e.printStackTrace();
-            }
-            catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-            catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-            catch (InvocationTargetException e) {
+                c.getMethod("setVisible", Boolean.TYPE).invoke(c.getDeclaredConstructor().newInstance(), true);
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException |
+                     InvocationTargetException e) {
                 e.printStackTrace();
             }
             return;
         }
-        LinkedList<File> list = new LinkedList<File>();
-        String[] arrstring = args;
-        int n = args.length;
-        for (int i = 0; i < n; ++i) {
-            Matcher matcher;
-            String uri = arrstring[i];
-            File file = new File(uri);
-            if (!file.isFile() || !(matcher = SubtitleConverter.PATTERN_FILE_EXTENTION.matcher(uri)).find()) continue;
-            list.add(file);
-        }
+        List<File> list = Arrays.stream(args)
+                .filter(uri -> SubtitleConverter.PATTERN_FILE_EXTENTION.matcher(uri).find())
+                .map(File::new)
+                .filter(File::isFile)
+                .collect(Collectors.toList());
+
         ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        for (File file : list) {
-            service.execute(new SubtitleConverter(file));
-        }
+        list.stream().map(SubtitleConverter::new).forEach(service::execute);
+
         service.shutdown();
         service.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         System.out.println();

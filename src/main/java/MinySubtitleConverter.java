@@ -30,7 +30,7 @@ public class MinySubtitleConverter {
 	private long sync = 0L;
 
 	@Parameter(names = {"--to", "-t"}, description = "Target extension. Allowed options: [smi|srt]")
-	private String ext = "srt";
+	private String ext = "";
 
     public static void main(String[] args) throws InterruptedException {
         var main = new MinySubtitleConverter();
